@@ -133,11 +133,11 @@ header { text-align:center; padding:18px 0 22px; }
   margin:6px 0 4px;
 }
 .abc-letter {
-  width:32px; height:32px;
-  border-radius:8px;
+  width:28px; height:28px;
+  border-radius:7px;
   display:flex; align-items:center; justify-content:center;
   font-family:'Fredoka One',cursive;
-  font-size:1em;
+  font-size:0.85em;
   font-weight:700;
   color:white;
   box-shadow:0 3px 0 rgba(0,0,0,0.2);
@@ -643,8 +643,8 @@ const CARD_COLORS = ['cc0','cc1','cc2','cc3','cc4','cc5'];
 // Build alphabet decoration row
 (function() {
   const row = document.getElementById('abcRow');
-  const bgs = ['#dc2626','#16a34a','#2563eb','#eab308','#7c3aed','#ea580c'];
-  const letters = ['א','ב','ג','ד','ה','ו','ז','ח'];
+  const bgs = ['#dc2626','#16a34a','#2563eb','#eab308','#7c3aed','#ea580c','#0891b2','#db2777'];
+  const letters = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
   letters.forEach((l,i) => {
     const el = document.createElement('div');
     el.className = 'abc-letter';
