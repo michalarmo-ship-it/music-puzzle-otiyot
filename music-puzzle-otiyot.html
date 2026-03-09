@@ -736,11 +736,14 @@ function makeCard(seg, delay) {
     <span class="seg-letter">${seg.letter}</span>
     <span class="seg-duration">${mm}:${ss}</span>
     <div class="waveform">${bars}</div>
-    <button class="play-btn" onclick="togglePlay(event,${seg.correctIndex},this)">▶ האזינו</button>
+    <button class="play-btn" 
+      ontouchstart="event.stopPropagation()"
+      ontouchend="event.stopPropagation()"
+      onclick="togglePlay(event,${seg.correctIndex},this)">▶ האזינו</button>
   `;
   card.addEventListener('dragstart',function(e){ this.classList.add('dragging'); e.dataTransfer.setData('text',''); window._dragCard=this; });
   card.addEventListener('dragend',function(){ this.classList.remove('dragging'); document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('drag-over')); });
-  card.addEventListener('touchstart',tStart,{passive:false});
+  card.addEventListener('touchstart',tStart,{passive:true});
   card.addEventListener('touchmove',tMove,{passive:false});
   card.addEventListener('touchend',tEnd);
   return card;
@@ -761,9 +764,12 @@ function stopCurrent() {
 
 function togglePlay(e,idx,btn) {
   e.stopPropagation();
+  e.preventDefault();
   if (isPlayingAll) { stopPlayAll(); return; }
   if (activePlayBtn===btn) { stopCurrent(); return; }
   stopCurrent();
+  // Resume AudioContext if suspended (required on iOS)
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   const seg=segments[idx];
   const src=audioCtx.createBufferSource();
   src.buffer=seg.buffer; src.connect(audioCtx.destination); src.start();
@@ -880,29 +886,47 @@ function dzDrop(e,zone) {
 }
 
 let tCard=null,tClone=null,tox=0,toy=0;
+let tDragging = false;
 function tStart(e) {
-  tCard=this; const t=e.touches[0],r=this.getBoundingClientRect();
+  // If tap is on the play button, don't intercept — let the click fire
+  if (e.target.closest('.play-btn')) return;
+  tCard=this; tDragging=false;
+  const t=e.touches[0],r=this.getBoundingClientRect();
   tox=t.clientX-r.left; toy=t.clientY-r.top;
-  tClone=this.cloneNode(true);
-  Object.assign(tClone.style,{position:'fixed',zIndex:999,width:r.width+'px',opacity:'0.85',pointerEvents:'none',transition:'none',left:(t.clientX-tox)+'px',top:(t.clientY-toy)+'px'});
-  document.body.appendChild(tClone); this.style.opacity='0.25'; e.preventDefault();
+  // Only prevent default after confirming drag intent (on move)
 }
 function tMove(e) {
-  if(!tClone) return; const t=e.touches[0];
-  tClone.style.left=(t.clientX-tox)+'px'; tClone.style.top=(t.clientY-toy)+'px'; e.preventDefault();
+  if(!tCard) return;
+  const t=e.touches[0];
+  if (!tDragging) {
+    // Start drag clone only after slight movement
+    const dx=t.clientX-tox-tCard.getBoundingClientRect().left+tox;
+    tDragging=true;
+    const r=tCard.getBoundingClientRect();
+    tClone=tCard.cloneNode(true);
+    Object.assign(tClone.style,{position:'fixed',zIndex:999,width:r.width+'px',opacity:'0.85',pointerEvents:'none',transition:'none',left:(t.clientX-tox)+'px',top:(t.clientY-toy)+'px'});
+    document.body.appendChild(tClone); tCard.style.opacity='0.25';
+  }
+  if(tClone) {
+    tClone.style.left=(t.clientX-tox)+'px'; tClone.style.top=(t.clientY-toy)+'px';
+  }
+  e.preventDefault();
 }
 function tEnd(e) {
-  if(!tClone||!tCard) return;
-  tClone.remove(); tCard.style.opacity='1';
-  const t=e.changedTouches[0],el=document.elementFromPoint(t.clientX,t.clientY);
-  const zone=el&&(el.closest('#answerZone')||el.closest('#poolZone'));
-  if(zone&&zone!==tCard.parentElement) {
-    const ph=zone.querySelector('.drop-placeholder'); if(ph) ph.remove();
-    zone.appendChild(tCard);
-    const az=document.getElementById('answerZone');
-    if(!az.querySelector('.seg-card')) az.innerHTML='<div class="drop-placeholder">📝 גרורו את הקטעים לכאן לפי הסדר הנכון</div>';
+  if(!tCard) return;
+  if(tClone) tClone.remove();
+  tCard.style.opacity='1';
+  if(tDragging) {
+    const t=e.changedTouches[0],el=document.elementFromPoint(t.clientX,t.clientY);
+    const zone=el&&(el.closest('#answerZone')||el.closest('#poolZone'));
+    if(zone&&zone!==tCard.parentElement) {
+      const ph=zone.querySelector('.drop-placeholder'); if(ph) ph.remove();
+      zone.appendChild(tCard);
+      const az=document.getElementById('answerZone');
+      if(!az.querySelector('.seg-card')) az.innerHTML='<div class="drop-placeholder">📝 גרורו את הקטעים לכאן לפי הסדר הנכון</div>';
+    }
   }
-  tCard=null; tClone=null;
+  tCard=null; tClone=null; tDragging=false;
 }
 
 function shuffle(arr) { for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]; } }
