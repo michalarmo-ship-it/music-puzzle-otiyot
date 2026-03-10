@@ -530,6 +530,109 @@ header { text-align:center; padding:18px 0 22px; }
   .controls { flex-direction:column; }
   .blackboard { padding:12px 20px 14px; }
 }
+
+/* ── Video modal ── */
+#videoModal {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+}
+#videoModal.show { display: flex; animation: fadeIn .3s; }
+.video-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  max-width: 560px;
+  width: calc(100% - 32px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  position: relative;
+  animation: cardIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+.video-card h3 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.3em;
+  color: var(--text, #1e1b4b);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.video-card video {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+.btn-close-video {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f3f4f6;
+  font-size: 1.1em;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.btn-close-video:hover { background: #e5e7eb; }
+.btn-how {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: var(--text, #1e1b4b);
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.95em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all .15s;
+}
+.btn-how:hover { border-color: var(--accent, #2563eb); color: var(--accent, #2563eb); }
+
+/* ── How to play button ── */
+.btn-how-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: white;
+  border: 2.5px solid #e5e7eb;
+  border-radius: 14px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.1em;
+  color: #374151;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: all .15s;
+}
+.btn-how-play:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+  box-shadow: 0 4px 14px rgba(220,38,38,0.15);
+  transform: translateY(-1px);
+}
+.btn-how-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  background: #dc2626;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75em;
+  padding-right: 1px;
+  box-shadow: 0 2px 6px rgba(220,38,38,0.4);
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -556,6 +659,10 @@ header { text-align:center; padding:18px 0 22px; }
         <button class="seg-btn" onclick="setSegs(5,this)">5 קטעים</button>
         <button class="seg-btn" onclick="setSegs(6,this)">6 קטעים</button>
       </div>
+      <button class="btn-how-play" onclick="openVideo()">
+        <span class="btn-how-icon">▶</span>
+        <span>איך משחקים?</span>
+      </button>
       <button class="btn-main" onclick="processAudio()">✏️ התחילו לשחק!</button>
     </div>
   </div>
@@ -946,6 +1053,33 @@ function launchConfetti() {
     },i*28);
   }
 }
+</script>
+
+<!-- Video modal -->
+<div id="videoModal">
+  <div class="video-card">
+    <button class="btn-close-video" onclick="closeVideo()">✕</button>
+    <h3>🎬 איך משחקים?</h3>
+    <video controls playsinline>
+      <source src="how2.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
+<script>
+function openVideo() {
+  document.getElementById('videoModal').classList.add('show');
+  document.getElementById('videoModal').querySelector('video').play();
+}
+function closeVideo() {
+  const modal = document.getElementById('videoModal');
+  modal.classList.remove('show');
+  modal.querySelector('video').pause();
+}
+// Close on backdrop click
+document.getElementById('videoModal').addEventListener('click', function(e) {
+  if (e.target === this) closeVideo();
+});
 </script>
 </body>
 </html>
